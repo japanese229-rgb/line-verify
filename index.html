@@ -65,45 +65,43 @@
         }
     }
 
-    async function submitForm(event) {
-        event.preventDefault();
-        const userId = document.getElementById('lineUserId').value;
-        const name = document.getElementById('realName').value;
-        const license = document.getElementById('licenseId').value;
-        const statusDiv = document.getElementById('status');
+async function submitForm(event) {
+    event.preventDefault();
+    const userId = document.getElementById('lineUserId').value;
+    const name = document.getElementById('realName').value;
+    const license = document.getElementById('licenseId').value;
+    const statusDiv = document.getElementById('status');
 
-        statusDiv.style.color = '#666';
-        statusDiv.innerText = '正在核對會員身分並轉換選單...';
+    statusDiv.style.color = '#666';
+    statusDiv.innerText = '正在核對會員身分並轉換選單...';
 
-        // ⚠️ 請在此處貼上您在第二步取得的 GAS 網頁應用程式 URL
-        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwN59SmdX6DPw-GjjSK_eRvBF8pgeR8cQa0VhL66ilyEfZi4qPzUF9N0x4qLs2z2Sjt/exec'; 
+    // ⚠️ 請填入步驟 2 取得的 GAS 網址
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwHjszSlMTNklXqq4SMtaGFmcmdUGQyGBEuFxw6kjJjADl_5VmvKJMzzxR8DbZcedTQbQ/exec'; 
 
-        try {
-            // 發送資料至 GAS 中繼後端進行切換
-            const response = await fetch(GAS_WEB_APP_URL, {
-                method: 'POST',
-                body: JSON.stringify({ userId: userId, name: name, license: license })
-            });
+    try {
+        const response = await fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify({ userId: userId, name: name, license: license })
+        });
 
-            const resData = await response.json();
+        const resData = await response.json();
 
-            if (resData.success) {
-                statusDiv.style.color = 'green';
-                statusDiv.innerText = '認證成功！已為您開通公會專屬功能選單！';
-                
-                setTimeout(() => {
-                    liff.closeWindow(); // 成功後關閉視窗回到 LINE 聊天室
-                }, 2000);
-            } else {
-                throw new Error(resData.error || '後端切換失敗');
-            }
-
-        } catch (error) {
-            console.error('切換失敗:', error);
-            statusDiv.style.color = 'red';
-            statusDiv.innerText = '驗證失敗，請稍後再試。';
+        if (resData.success) {
+            statusDiv.style.color = 'green';
+            statusDiv.innerText = '認證成功！已為您開通公會專屬功能選單！';
+            setTimeout(() => {
+                liff.closeWindow(); // 自動關閉視窗回到聊天室
+            }, 2000);
+        } else {
+            throw new Error(resData.error || '後端切換失敗');
         }
+
+    } catch (error) {
+        console.error('切換失敗:', error);
+        statusDiv.style.color = 'red';
+        statusDiv.innerText = '驗證失敗，請稍後再試。';
     }
+}
 
     // 啟動 LIFF 初始化
     initLiff();
