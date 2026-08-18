@@ -73,31 +73,36 @@ async function submitForm(event) {
     const statusDiv = document.getElementById('status');
 
     statusDiv.style.color = '#666';
-    statusDiv.innerText = '正在核對會員身分並轉換選單...';
+    statusDiv.innerText = '正在寫入資料...';
 
-    // ⚠️ 請填入步驟 2 取得的 GAS 網址
+    // ⚠️ 請務必確認此處為新試算表擴充功能產生的 GAS 網址 (結尾必須是 /exec)
     const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxBbxPZ-gRH17e6mjiQKpDL9ALbyddskmuTC6c6QlAqglj0E4eTqHjfyy8xPaJBR0OErw/exec'; 
 
     try {
         const response = await fetch(GAS_WEB_APP_URL, {
             method: 'POST',
+            headers: {
+                'Content-Type': 'text/plain;charset=utf-8', // 使用 text/plain 可避免預檢 (Preflight) 阻擋
+            },
             body: JSON.stringify({ userId: userId, name: name, license: license })
         });
 
         const resData = await response.json();
 
         if (resData.success) {
-    statusDiv.style.color = 'green';
-    statusDiv.innerText = '資料已成功送出！公會將於人工審核無誤後為您開通專屬選單。';
-    setTimeout(() => {
-        liff.closeWindow();
-    }, 2500);
-}
+            statusDiv.style.color = 'green';
+            statusDiv.innerText = '資料已成功送出！公會將於人工審核無誤後為您開通專屬選單。';
+            setTimeout(() => {
+                liff.closeWindow();
+            }, 2500);
+        } else {
+            throw new Error(resData.error || '寫入失敗');
+        }
 
     } catch (error) {
-        console.error('切換失敗:', error);
+        console.error('連線失敗:', error);
         statusDiv.style.color = 'red';
-        statusDiv.innerText = 'GAS 連線失敗，請檢查 API 網址：' + error.message;
+        statusDiv.innerText = '連線失敗或網址不正確，請稍後再試。';
     }
 }
 
