@@ -75,24 +75,33 @@
         statusDiv.style.color = '#666';
         statusDiv.innerText = '正在核對會員身分並轉換選單...';
 
-        // ⚠️ 請替換為您在第二階段取得的「已認證選單 B」的 richMenuId
-        const FULL_FUNCTIONS_MENU_ID = 'richmenu-8f12dfd83afea22e60396f2ef1a1e902'; 
+        // ⚠️ 請在此處貼上您在第二步取得的 GAS 網頁應用程式 URL
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwN59SmdX6DPw-GjjSK_eRvBF8pgeR8cQa0VhL66ilyEfZi4qPzUF9N0x4qLs2z2Sjt/exec'; 
 
         try {
-            // 使用 LIFF 官方原生 API 切換選單（無需伺服器代理，亦不會有 CORS 錯誤）
-            await liff.linkRichMenuId(FULL_FUNCTIONS_MENU_ID);
+            // 發送資料至 GAS 中繼後端進行切換
+            const response = await fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({ userId: userId, name: name, license: license })
+            });
 
-            statusDiv.style.color = 'green';
-            statusDiv.innerText = '認證成功！已為您開通公會專屬功能選單！';
-            
-            setTimeout(() => {
-                liff.closeWindow(); // 自動關閉 LIFF 網頁視窗，返回 LINE 聊天室
-            }, 2000);
+            const resData = await response.json();
+
+            if (resData.success) {
+                statusDiv.style.color = 'green';
+                statusDiv.innerText = '認證成功！已為您開通公會專屬功能選單！';
+                
+                setTimeout(() => {
+                    liff.closeWindow(); // 成功後關閉視窗回到 LINE 聊天室
+                }, 2000);
+            } else {
+                throw new Error(resData.error || '後端切換失敗');
+            }
 
         } catch (error) {
-            console.error('選單切換失敗:', error);
+            console.error('切換失敗:', error);
             statusDiv.style.color = 'red';
-            statusDiv.innerText = '切換選單失敗，請確認 RichMenu ID 設定是否正確。';
+            statusDiv.innerText = '驗證失敗，請稍後再試。';
         }
     }
 
