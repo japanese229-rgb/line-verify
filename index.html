@@ -99,7 +99,7 @@ async function submitForm(event) {
     } catch (error) {
         console.error('切換失敗:', error);
         statusDiv.style.color = 'red';
-        statusDiv.innerText = '驗證失敗，請稍後再試。';
+        statusDiv.innerText = 'GAS 連線失敗，請檢查 API 網址：' + error.message;
     }
 }
 
