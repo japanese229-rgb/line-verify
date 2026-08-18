@@ -70,20 +70,47 @@
     }
 
     async function submitForm(event) {
-        event.preventDefault();
-        const userId = document.getElementById('lineUserId').value;
-        const name = document.getElementById('realName').value;
-        const license = document.getElementById('licenseId').value;
-        const statusDiv = document.getElementById('status');
+    event.preventDefault();
+    const userId = document.getElementById('lineUserId').value;
+    const name = document.getElementById('realName').value;
+    const license = document.getElementById('licenseId').value;
+    const statusDiv = document.getElementById('status');
 
-        statusDiv.innerText = '正在傳送審查資料...';
+    statusDiv.innerText = '正在核對會員身分並轉換選單...';
 
-        // 這裡可以串接你的後端 API。
-        // 如果目前沒有後端，可以先用簡單的 Google 表單/試算表網址代替接收資料。
-        console.log('送出的資料：', { userId, name, license });
-        
-        statusDiv.style.color = 'green';
-        statusDiv.innerText = '提交成功！管理員審核過後將為主體開通選單。';
+    // 1. 填入你從 LINE 官方帳號管理後台做好的「正式選單」ID
+    // (如果目前還不知道正式選單 ID，可先留空，之後跟查出來的代碼替換)
+    const FULL_FUNCTIONS_MENU_ID = 'richmenu-xxxxxxxxxxxxxx'; 
+    
+    // 2. 填入你剛才在第二步複製的那串超長 Channel Access Token
+    const CHANNEL_ACCESS_TOKEN = 'UfIQcM9Vw2GI5DV9daa6KRr+IZWb4wtqcCZmqwa2+NuIWDE/luJRo4bdnvZUoeXSeuL+uD14pTRSHA4cDI47h2TXqGnSX2n+BScZ1UVwbZXn+ionJKt3I+HUqzhjhVYQz73tbEkBlqDS34dv6hNABAdB04t89/1O/w1cDnyilFU=';
+
+    try {
+        // 呼叫 LINE 官方 API，立即幫這個特定的 User ID 更換選單
+        const response = await fetch(`https://line.me{userId}/richmenu/${FULL_FUNCTIONS_MENU_ID}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${CHANNEL_ACCESS_TOKEN}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if(response.ok) {
+            statusDiv.style.color = 'green';
+            statusDiv.innerText = '認證成功！已為您開通公會專屬功能選單！';
+            setTimeout(() => {
+                liff.closeWindow(); // 自動關閉網頁視窗，返回 LINE 聊天室
+            }, 2000);
+        } else {
+            statusDiv.style.color = 'red';
+            statusDiv.innerText = '連線換取選單失敗，請確認 Token 與 RichMenuID 是否正確。';
+        }
+    } catch (error) {
+        statusDiv.style.color = 'red';
+        statusDiv.innerText = '網路錯誤，請稍後再試。';
+    }
+}
+
         
         setTimeout(() => {
             liff.closeWindow(); // 成功後自動關閉網頁視窗
