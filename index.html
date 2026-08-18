@@ -87,14 +87,12 @@ async function submitForm(event) {
         const resData = await response.json();
 
         if (resData.success) {
-            statusDiv.style.color = 'green';
-            statusDiv.innerText = '認證成功！已為您開通公會專屬功能選單！';
-            setTimeout(() => {
-                liff.closeWindow(); // 自動關閉視窗回到聊天室
-            }, 2000);
-        } else {
-            throw new Error(resData.error || '後端切換失敗');
-        }
+    statusDiv.style.color = 'green';
+    statusDiv.innerText = '資料已成功送出！公會將於人工審核無誤後為您開通專屬選單。';
+    setTimeout(() => {
+        liff.closeWindow();
+    }, 2500);
+}
 
     } catch (error) {
         console.error('切換失敗:', error);
