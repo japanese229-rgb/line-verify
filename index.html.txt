@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公會會員身分認證</title>
+    <!-- 引入 LINE 官方的 LIFF 工具包 -->
+    <script src="https://line-scdn.net"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f6f9; padding: 20px; color: #333; }
+        .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px; margin: 0 auto; }
+        h2 { color: #06C755; text-align: center; margin-top: 0; }
+        .form-group { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 14px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        button { background: #06C755; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:hover { background: #05b34c; }
+        #status { text-align: center; color: #666; font-size: 14px; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>會員身分認證系統</h2>
+    <div id="loading" style="text-align: center; padding: 20px;">正在讀取 LINE 安全數位身分...</div>
+
+    <!-- 驗證表單，一開始先隱藏，等抓到 LINE 身分才顯示 -->
+    <form id="verifyForm" style="display:none;" onsubmit="submitForm(event)">
+        <!-- 隱藏欄位：用來自動記錄該用戶的 LINE User ID -->
+        <input type="hidden" id="lineUserId">
+
+        <div class="form-group">
+            <label for="realName">真實姓名：</label>
+            <input type="text" id="realName" required placeholder="請輸入完整姓名">
+        </div>
+
+        <div class="form-group">
+            <label for="licenseId">呼吸治療師證書字號：</label>
+            <input type="text" id="licenseId" required placeholder="例如：呼字第XXXXXX號">
+        </div>
+
+        <button type="submit">送出資料審查</button>
+    </form>
+    <div id="status"></div>
+</div>
+
+<script>
+    // ⚠️ 請在第二階段完成後，回來將這裡修改為你在 LINE 後台得到的 LIFF ID
+    const MY_LIFF_ID = '先不要動這一行'; 
+
+    async function initLiff() {
+        try {
+            await liff.init({ liffId: MY_LIFF_ID });
+            if (!liff.isLoggedIn()) {
+                liff.login();
+                return;
+            }
+            
+            // 自動抓取用戶的 LINE Profile
+            const profile = await liff.getProfile();
+            document.getElementById('lineUserId').value = profile.userId;
+
+            // 隱藏加載中，顯示表單
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('verifyForm').style.display = 'block';
+        } catch (error) {
+            console.error(error);
+            document.getElementById('loading').innerText = '系統初始化失敗，請確保在 LINE 軟體內開啟。';
+        }
+    }
+
+    async function submitForm(event) {
+        event.preventDefault();
+        const userId = document.getElementById('lineUserId').value;
+        const name = document.getElementById('realName').value;
+        const license = document.getElementById('licenseId').value;
+        const statusDiv = document.getElementById('status');
+
+        statusDiv.innerText = '正在傳送審查資料...';
+
+        // 這裡可以串接你的後端 API。
+        // 如果目前沒有後端，可以先用簡單的 Google 表單/試算表網址代替接收資料。
+        console.log('送出的資料：', { userId, name, license });
+        
+        statusDiv.style.color = 'green';
+        statusDiv.innerText = '提交成功！管理員審核過後將為主體開通選單。';
+        
+        setTimeout(() => {
+            liff.closeWindow(); // 成功後自動關閉網頁視窗
+        }, 2000);
+    }
+
+    // 啟動系統
+    initLiff();
+</script>
+
+</body>
+</html>
