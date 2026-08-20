@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>會員退會申請表</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f6f9; padding: 20px; color: #333; }
+        .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 450px; margin: 0 auto; }
+        h2 { color: #dc3545; text-align: center; margin-top: 0; font-size: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 14px; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
+        button { background: #dc3545; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:hover { background: #c82333; }
+        #status { text-align: center; color: #666; font-size: 14px; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>社團法人台中市呼吸治療師公會<br>會員退會申請</h2>
+    <div id="loading" style="text-align: center; padding: 20px;">正在讀取 LINE 安全數位身分...</div>
+
+    <form id="resignationForm" style="display:none;" onsubmit="submitForm(event)">
+        <input type="hidden" id="lineUserId">
+
+        <div class="form-group"><label for="name">姓名：</label><input type="text" id="name" required placeholder="請輸入姓名"></div>
+        <div class="form-group">
+            <label for="gender">性別：</label>
+            <select id="gender" required>
+                <option value="男">男</option>
+                <option value="女">女</option>
+            </select>
+        </div>
+        <div class="form-group"><label for="idCard">身分證字號：</label><input type="text" id="idCard" required placeholder="例如：A123456789"></div>
+        <div class="form-group"><label for="dob">出生年月日：</label><input type="text" id="dob" required placeholder="例如：70/01/01"></div>
+        <div class="form-group"><label for="license">呼吸治療師證號：</label><input type="text" id="license" required placeholder="數字即可，例如：003851"></div>
+        <div class="form-group"><label for="phone">行動電話：</label><input type="tel" id="phone" required placeholder="例如：0912345678"></div>
+        <div class="form-group"><label for="email">電子信箱：</label><input type="email" id="email" required placeholder="例如：example@gmail.com"></div>
+        <div class="form-group"><label for="address">通訊地址：</label><input type="text" id="address" required placeholder="請輸入完整通訊地址"></div>
+        <div class="form-group"><label for="hospital">原服務醫院/單位：</label><input type="text" id="hospital" required placeholder="請輸入醫院或單位名稱"></div>
+        <div class="form-group"><label for="title">職稱：</label><input type="text" id="title" required placeholder="例如：呼吸治療師"></div>
+        <div class="form-group"><label for="leaveDate">離職/異動日期：</label><input type="date" id="leaveDate" required></div>
+        <div class="form-group"><label for="reason">退會原因：</label><textarea id="reason" rows="3" required placeholder="請簡述退會原因（如：轉區、歇業等）"></textarea></div>
+
+        <button type="submit">確認送出並生成正式 PDF 表單</button>
+    </form>
+    <div id="status"></div>
+</div>
+
+<script>
+    // ⚠️ 請填入您為「退會申請」建立的第二個 LIFF ID
+    const MY_LIFF_ID = '請貼上您的退會LIFF_ID'; 
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxBbxPZ-gRH17e6mjiQKpDL9ALbyddskmuTC6c6QlAqglj0E4eTqHjfyy8xPaJBR0OErw/exec'; 
+
+    async function initLiff() {
+        try {
+            await liff.init({ liffId: MY_LIFF_ID });
+            if (!liff.isLoggedIn()) {
+                liff.login();
+                return;
+            }
+            const profile = await liff.getProfile();
+            document.getElementById('lineUserId').value = profile.userId;
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('resignationForm').style.display = 'block';
+        } catch (error) {
+            console.error(error);
+            document.getElementById('loading').innerText = '系統初始化失敗，請確保在 LINE 軟體內開啟。';
+        }
+    }
+
+    async function submitForm(event) {
+        event.preventDefault();
+        const statusDiv = document.getElementById('status');
+        statusDiv.style.color = '#666';
+        statusDiv.innerText = '正在處理資料並自動匯出 PDF 申請書...';
+
+        const payload = {
+            type: "resignation", // 關鍵標籤：告知 GAS 這是退會申請
+            userId: document.getElementById('lineUserId').value,
+            name: document.getElementById('name').value,
+            gender: document.getElementById('gender').value,
+            idCard: document.getElementById('idCard').value,
+            dob: document.getElementById('dob').value,
+            license: document.getElementById('license').value,
+            phone: document.getElementById('phone').value,
+            email: document.getElementById('email').value,
+            address: document.getElementById('address').value,
+            hospital: document.getElementById('hospital').value,
+            title: document.getElementById('title').value,
+            leaveDate: document.getElementById('leaveDate').value,
+            reason: document.getElementById('reason').value
+        };
+
+        try {
+            const response = await fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            });
+
+            const resData = await response.json();
+
+            if (resData.success) {
+                statusDiv.style.color = 'green';
+                statusDiv.innerText = '退會申請已成功送出！系統已自動生成 PDF 表單送交秘書處。';
+                setTimeout(() => { liff.closeWindow(); }, 2500);
+            } else {
+                throw new Error(resData.error || '送出失敗');
+            }
+        } catch (error) {
+            console.error('連線失敗:', error);
+            statusDiv.style.color = 'red';
+            statusDiv.innerText = '連線失敗，請稍後再試。';
+        }
+    }
+
+    initLiff();
+</script>
+
+</body>
+</html>
