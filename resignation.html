@@ -11,7 +11,7 @@
         h2 { color: #dc3545; text-align: center; margin-top: 0; font-size: 20px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 14px; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
         button { background: #dc3545; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         button:hover { background: #c82333; }
         #status { text-align: center; color: #666; font-size: 14px; margin-top: 15px; }
@@ -42,8 +42,6 @@
         <div class="form-group"><label for="address">通訊地址：</label><input type="text" id="address" required placeholder="請輸入完整通訊地址"></div>
         <div class="form-group"><label for="hospital">原服務醫院/單位：</label><input type="text" id="hospital" required placeholder="請輸入醫院或單位名稱"></div>
         <div class="form-group"><label for="title">職稱：</label><input type="text" id="title" required placeholder="例如：呼吸治療師"></div>
-        <div class="form-group"><label for="leaveDate">離職/異動日期：</label><input type="date" id="leaveDate" required></div>
-        <div class="form-group"><label for="reason">退會原因：</label><textarea id="reason" rows="3" required placeholder="請簡述退會原因（如：轉區、歇業等）"></textarea></div>
 
         <button type="submit">確認送出並生成正式 PDF 表單</button>
     </form>
@@ -51,7 +49,6 @@
 </div>
 
 <script>
-    // ⚠️ 請填入您為「退會申請」建立的第二個 LIFF ID
     const MY_LIFF_ID = '2011151714-TRdvuk5W'; 
     const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxBbxPZ-gRH17e6mjiQKpDL9ALbyddskmuTC6c6QlAqglj0E4eTqHjfyy8xPaJBR0OErw/exec'; 
 
@@ -73,49 +70,45 @@
         }
     }
 
-async function submitForm(event) {
-    event.preventDefault();
-    const statusDiv = document.getElementById('status');
-    statusDiv.style.color = '#666';
-    statusDiv.innerText = '正在處理資料並自動匯出 PDF 申請書...';
+    async function submitForm(event) {
+        event.preventDefault();
+        const statusDiv = document.getElementById('status');
+        statusDiv.style.color = '#666';
+        statusDiv.innerText = '正在處理資料並自動匯出 PDF 申請書...';
 
-    const payload = {
-        type: "resignation",
-        userId: document.getElementById('lineUserId').value,
-        name: document.getElementById('name').value,
-        gender: document.getElementById('gender').value,
-        idCard: document.getElementById('idCard').value,
-        dob: document.getElementById('dob').value,
-        license: document.getElementById('license').value,
-        phone: document.getElementById('phone').value,
-        email: document.getElementById('email').value,
-        address: document.getElementById('address').value,
-        hospital: document.getElementById('hospital').value,
-        title: document.getElementById('title').value,
-        leaveDate: document.getElementById('leaveDate').value,
-        reason: document.getElementById('reason').value
-    };
+        const payload = {
+            type: "resignation",
+            userId: document.getElementById('lineUserId').value,
+            name: document.getElementById('name').value,
+            gender: document.getElementById('gender').value,
+            idCard: document.getElementById('idCard').value,
+            dob: document.getElementById('dob').value,
+            license: document.getElementById('license').value,
+            phone: document.getElementById('phone').value,
+            email: document.getElementById('email').value,
+            address: document.getElementById('address').value,
+            hospital: document.getElementById('hospital').value,
+            title: document.getElementById('title').value
+        };
 
-    try {
-        // 使用 no-cors 模式確保請求必定發送不卡住
-        await fetch(GAS_WEB_APP_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(payload)
-        });
+        try {
+            await fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            });
 
-        // 成功送出後顯示提示並關閉 LIFF 視窗
-        statusDiv.style.color = 'green';
-        statusDiv.innerText = '退會申請已成功送出！系統已自動生成 PDF 表單送交秘書處。';
-        setTimeout(() => { liff.closeWindow(); }, 2500);
+            statusDiv.style.color = 'green';
+            statusDiv.innerText = '退會申請已成功送出！系統已自動生成 PDF 表單送交秘書處。';
+            setTimeout(() => { liff.closeWindow(); }, 2500);
 
-    } catch (error) {
-        console.error('連線失敗:', error);
-        statusDiv.style.color = 'red';
-        statusDiv.innerText = '送出失敗，請稍後再試。';
+        } catch (error) {
+            console.error('連線失敗:', error);
+            statusDiv.style.color = 'red';
+            statusDiv.innerText = '送出失敗，請稍後再試。';
+        }
     }
-}
 
     initLiff();
 </script>
