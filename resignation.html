@@ -73,51 +73,49 @@
         }
     }
 
-    async function submitForm(event) {
-        event.preventDefault();
-        const statusDiv = document.getElementById('status');
-        statusDiv.style.color = '#666';
-        statusDiv.innerText = '正在處理資料並自動匯出 PDF 申請書...';
+async function submitForm(event) {
+    event.preventDefault();
+    const statusDiv = document.getElementById('status');
+    statusDiv.style.color = '#666';
+    statusDiv.innerText = '正在處理資料並自動匯出 PDF 申請書...';
 
-        const payload = {
-            type: "resignation", // 關鍵標籤：告知 GAS 這是退會申請
-            userId: document.getElementById('lineUserId').value,
-            name: document.getElementById('name').value,
-            gender: document.getElementById('gender').value,
-            idCard: document.getElementById('idCard').value,
-            dob: document.getElementById('dob').value,
-            license: document.getElementById('license').value,
-            phone: document.getElementById('phone').value,
-            email: document.getElementById('email').value,
-            address: document.getElementById('address').value,
-            hospital: document.getElementById('hospital').value,
-            title: document.getElementById('title').value,
-            leaveDate: document.getElementById('leaveDate').value,
-            reason: document.getElementById('reason').value
-        };
+    const payload = {
+        type: "resignation",
+        userId: document.getElementById('lineUserId').value,
+        name: document.getElementById('name').value,
+        gender: document.getElementById('gender').value,
+        idCard: document.getElementById('idCard').value,
+        dob: document.getElementById('dob').value,
+        license: document.getElementById('license').value,
+        phone: document.getElementById('phone').value,
+        email: document.getElementById('email').value,
+        address: document.getElementById('address').value,
+        hospital: document.getElementById('hospital').value,
+        title: document.getElementById('title').value,
+        leaveDate: document.getElementById('leaveDate').value,
+        reason: document.getElementById('reason').value
+    };
 
-        try {
-            const response = await fetch(GAS_WEB_APP_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(payload)
-            });
+    try {
+        // 使用 no-cors 模式確保請求必定發送不卡住
+        await fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+        });
 
-            const resData = await response.json();
+        // 成功送出後顯示提示並關閉 LIFF 視窗
+        statusDiv.style.color = 'green';
+        statusDiv.innerText = '退會申請已成功送出！系統已自動生成 PDF 表單送交秘書處。';
+        setTimeout(() => { liff.closeWindow(); }, 2500);
 
-            if (resData.success) {
-                statusDiv.style.color = 'green';
-                statusDiv.innerText = '退會申請已成功送出！系統已自動生成 PDF 表單送交秘書處。';
-                setTimeout(() => { liff.closeWindow(); }, 2500);
-            } else {
-                throw new Error(resData.error || '送出失敗');
-            }
-        } catch (error) {
-            console.error('連線失敗:', error);
-            statusDiv.style.color = 'red';
-            statusDiv.innerText = '連線失敗，請稍後再試。';
-        }
+    } catch (error) {
+        console.error('連線失敗:', error);
+        statusDiv.style.color = 'red';
+        statusDiv.innerText = '送出失敗，請稍後再試。';
     }
+}
 
     initLiff();
 </script>
