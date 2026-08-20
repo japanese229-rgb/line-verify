@@ -77,7 +77,6 @@ async function submitForm(event) {
 
     // ⚠️ 請務必確認此處為新試算表擴充功能產生的 GAS 網址 (結尾必須是 /exec)
     const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxBbxPZ-gRH17e6mjiQKpDL9ALbyddskmuTC6c6QlAqglj0E4eTqHjfyy8xPaJBR0OErw/exec'; 
-
     try {
         const response = await fetch(GAS_WEB_APP_URL, {
             method: 'POST',
